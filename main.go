@@ -8,32 +8,32 @@ import (
 )
 
 var (
-	homeTemplate    *views.View
-	contactTemplate *views.View
+	homeView    *views.View
+	contactView *views.View
 )
 
 func home(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
-	err := homeTemplate.Template.ExecuteTemplate(w, homeTemplate.Layout, nil)
-	if err != nil {
-		panic(err)
-	}
+	must(homeView.Render(w, nil))
 }
 
 func contact(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
-	err := contactTemplate.Template.ExecuteTemplate(w, contactTemplate.Layout, nil)
-	if err != nil {
-		panic(err)
-	}
+	must(contactView.Render(w, nil))
 }
 
 func main() {
-	homeTemplate = views.NewView("index", "views/home.gohtml")
-	contactTemplate = views.NewView("index", "views/contact.gohtml")
+	homeView = views.NewView("index", "views/home.gohtml")
+	contactView = views.NewView("index", "views/contact.gohtml")
 
 	r := mux.NewRouter()
 	r.HandleFunc("/", home)
 	r.HandleFunc("/contact", contact)
-	http.ListenAndServe("localhost:3000", r)
+	must(http.ListenAndServe("localhost:3000", r))
+}
+
+func must(err error) {
+	if err != nil {
+		panic(err)
+	}
 }
