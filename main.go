@@ -1,33 +1,39 @@
 package main
 
 import (
-	"fmt"
+	"myphoto/views"
 	"net/http"
 
 	"github.com/gorilla/mux"
 )
 
-func home(w http.ResponseWriter, r *http.Request) {
+var (
+	homeTemplate    *views.View
+	contactTemplate *views.View
+)
+
+func home(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
-	fmt.Fprint(w, "<h1>Welcome to my awesome site!</h1>")
+	err := homeTemplate.Template.ExecuteTemplate(w, homeTemplate.Layout, nil)
+	if err != nil {
+		panic(err)
+	}
 }
 
-func about(w http.ResponseWriter, r *http.Request) {
+func contact(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
-	fmt.Fprint(w, "To contact me, please send an email to "+
-		"<a href=\"mailto:support@myphoto.com\">support@myphoto.com</a>")
-}
-
-func error404(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html")
-	w.WriteHeader(http.StatusNotFound)
-	fmt.Fprint(w, "<h1>404: The page for "+r.URL.Path+" could not be found</h1>")
+	err := contactTemplate.Template.ExecuteTemplate(w, contactTemplate.Layout, nil)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func main() {
+	homeTemplate = views.NewView("index", "views/home.gohtml")
+	contactTemplate = views.NewView("index", "views/contact.gohtml")
+
 	r := mux.NewRouter()
 	r.HandleFunc("/", home)
-	r.HandleFunc("/about", about)
-	r.NotFoundHandler = http.HandlerFunc(error404)
+	r.HandleFunc("/contact", contact)
 	http.ListenAndServe("localhost:3000", r)
 }
