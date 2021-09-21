@@ -31,5 +31,11 @@ func (u *Users) New(w http.ResponseWriter, r *http.Request) {
 // Create is used to for processing the user create account form.
 // POST /signup
 func (u *Users) Create(w http.ResponseWriter, r *http.Request) {
-	fmt.Println(w, "User account created")
+	err := r.ParseForm()
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Fprintln(w, r.PostForm["email"])
+	fmt.Fprintln(w, r.PostForm["password"])
 }
