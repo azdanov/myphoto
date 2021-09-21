@@ -4,8 +4,8 @@ import "myphoto/views"
 
 func NewStatic() *Static {
 	return &Static{
-		Home:    views.NewView("index", "views/static/home.gohtml"),
-		Contact: views.NewView("index", "views/static/contact.gohtml"),
+		Home:    views.NewView("index", "static/home"),
+		Contact: views.NewView("index", "static/contact"),
 	}
 }
 

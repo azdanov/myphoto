@@ -11,7 +11,7 @@ import (
 // and should be used only during initial mux setup.
 func NewUsers() *Users {
 	return &Users{
-		NewView: views.NewView("index", "views/users/new.gohtml"),
+		NewView: views.NewView("index", "users/new"),
 	}
 }
 
