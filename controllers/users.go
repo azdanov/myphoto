@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"myphoto/views"
 	"net/http"
+
+	"github.com/gorilla/schema"
 )
 
 // NewUsers creates a new Users Controller.
@@ -28,14 +30,25 @@ func (u *Users) New(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+type SignupForm struct {
+	Email    string `schema:"email"`
+	Password string `schema:"password"`
+}
+
 // Create is used to for processing the user create account form.
 // POST /signup
 func (u *Users) Create(w http.ResponseWriter, r *http.Request) {
-	err := r.ParseForm()
-	if err != nil {
+	if err := r.ParseForm(); err != nil {
 		panic(err)
 	}
 
-	fmt.Fprintln(w, r.PostForm["email"])
-	fmt.Fprintln(w, r.PostForm["password"])
+	dec := schema.NewDecoder()
+	var form SignupForm
+
+	if err := dec.Decode(&form, r.PostForm); err != nil {
+		panic(err)
+	}
+
+	fmt.Fprintln(w, form.Email)
+	fmt.Fprintln(w, form.Password)
 }
