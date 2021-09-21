@@ -1,6 +1,7 @@
 package main
 
 import (
+	"myphoto/controllers"
 	"myphoto/views"
 	"net/http"
 
@@ -10,8 +11,20 @@ import (
 var (
 	homeView    *views.View
 	contactView *views.View
-	signupView  *views.View
 )
+
+func main() {
+	homeView = views.NewView("index", "views/home.gohtml")
+	contactView = views.NewView("index", "views/contact.gohtml")
+	usersC := controllers.NewUsers()
+
+	r := mux.NewRouter()
+	r.HandleFunc("/", home).Methods("GET")
+	r.HandleFunc("/contact", contact).Methods("GET")
+	r.HandleFunc("/signup", usersC.New).Methods("GET")
+	r.HandleFunc("/signup", usersC.Create).Methods("POST")
+	must(http.ListenAndServe("localhost:3000", r))
+}
 
 func home(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
@@ -21,23 +34,6 @@ func home(w http.ResponseWriter, _ *http.Request) {
 func contact(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
 	must(contactView.Render(w, nil))
-}
-
-func signup(w http.ResponseWriter, _ *http.Request) {
-	w.Header().Set("Content-Type", "text/html")
-	must(signupView.Render(w, nil))
-}
-
-func main() {
-	homeView = views.NewView("index", "views/home.gohtml")
-	contactView = views.NewView("index", "views/contact.gohtml")
-	signupView = views.NewView("index", "views/signup.gohtml")
-
-	r := mux.NewRouter()
-	r.HandleFunc("/", home)
-	r.HandleFunc("/contact", contact)
-	r.HandleFunc("/signup", signup)
-	must(http.ListenAndServe("localhost:3000", r))
 }
 
 func must(err error) {
