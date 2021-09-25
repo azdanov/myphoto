@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"myphoto/controllers"
 	"net/http"
 
@@ -16,6 +17,8 @@ func main() {
 	r.Handle("/contact", staticC.Contact).Methods("GET")
 	r.HandleFunc("/signup", usersC.New).Methods("GET")
 	r.HandleFunc("/signup", usersC.Create).Methods("POST")
+
+	fmt.Println("Starting on: http://localhost:3000")
 	if err := http.ListenAndServe("localhost:3000", r); err != nil {
 		return
 	}
