@@ -44,14 +44,16 @@ func (u *Users) Create(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	user := models.User{
+	user := toUserModel(form)
+	if err := u.us.Create(&user); err != nil {
+		http.Error(w, err.Error(), http.StatusConflict)
+	}
+}
+
+func toUserModel(form SignupForm) models.User {
+	return models.User{
 		Name:     form.Name,
 		Email:    form.Email,
-		Password: form.Password, // Unsafe
-	}
-
-	err := u.us.Create(&user)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusConflict)
+		Password: form.Password,
 	}
 }

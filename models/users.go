@@ -3,6 +3,7 @@ package models
 import (
 	"errors"
 
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
@@ -51,7 +52,25 @@ func first(db *gorm.DB, dst interface{}) error {
 // Create will create a new user and fill additional
 // fields: ID, CreatedAt and UpdatedAt.
 func (us *UserService) Create(user *User) error {
+	p, err := hashPassword(user.Password)
+	if err != nil {
+		return err
+	}
+	user.Password = ""
+	user.PasswordHash = p
 	return us.db.Create(user).Error
+}
+
+// hashPassword will hash a given password with bcrypt and a default cost.
+func hashPassword(password string) (string, error) {
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	return string(bytes), err
+}
+
+// checkPasswordHash compares a password and a hash.
+func checkPasswordHash(password, hash string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	return err == nil
 }
 
 // Update will update the user with the provided data.
@@ -86,7 +105,8 @@ func (us *UserService) AutoMigrate() error {
 
 type User struct {
 	gorm.Model
-	Name     string
-	Email    string `gorm:"not null;uniqueIndex"`
-	Password string
+	Name         string
+	Email        string `gorm:"not null;uniqueIndex"`
+	Password     string `gorm:"-"`
+	PasswordHash string `gorm:"not null"`
 }
