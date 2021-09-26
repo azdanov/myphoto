@@ -11,13 +11,18 @@
             z-index: 2;
         }
 
-        .form-signup input[type="email"] {
-            margin-bottom: -1px;
+        .form-signup input[name="name"] {
             border-bottom-right-radius: 0;
             border-bottom-left-radius: 0;
+            margin-bottom: -1px;
         }
 
-        .form-signup input[type="password"] {
+        .form-signup input[name="email"] {
+            border-radius: 0;
+            margin-bottom: -1px;
+        }
+
+        .form-signup input[name="password"] {
             margin-bottom: 10px;
             border-top-left-radius: 0;
             border-top-right-radius: 0;
@@ -29,6 +34,10 @@
     <form class="form-signup" action="/signup" method="post">
         <h1 class="h3 mb-3 fw-normal">Please sign up</h1>
 
+        <div class="form-floating">
+            <input name="name" type="text" class="form-control" id="floatingInput" placeholder="Alex Smith">
+            <label for="floatingInput">Name</label>
+        </div>
         <div class="form-floating">
             <input name="email" type="email" class="form-control" id="floatingInput" placeholder="name@example.com">
             <label for="floatingInput">Email address</label>
