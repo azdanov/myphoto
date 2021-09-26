@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"errors"
 	"fmt"
 	"myphoto/models"
 	"myphoto/views"
@@ -39,9 +40,12 @@ func (u *Users) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user := toUserModel(form)
-	if err := u.us.Create(&user); err != nil {
+	err := u.us.Create(&user)
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusConflict)
+		return
 	}
+	fmt.Fprintln(w, user)
 }
 
 func toUserModel(form SignupForm) models.User {
@@ -65,5 +69,17 @@ func (u *Users) Login(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	fmt.Fprintln(w, form)
+	user, err := u.us.Authenticate(form.Email, form.Password)
+	if err != nil {
+		switch {
+		case errors.Is(err, models.ErrResNotFound):
+			http.Error(w, "Invalid email address", http.StatusForbidden)
+		case errors.Is(err, models.ErrInvalidPassword):
+			http.Error(w, "Invalid password provided", http.StatusForbidden)
+		default:
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		return
+	}
+	fmt.Fprintln(w, user)
 }

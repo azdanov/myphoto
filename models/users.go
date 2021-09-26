@@ -12,6 +12,8 @@ var (
 	ErrResNotFound = errors.New("models: resource was not found")
 	// ErrInvalidID is returned when an invalid ID is provided to a method like Delete.
 	ErrInvalidID = errors.New("models: provided ID was invalid")
+	// ErrInvalidPassword is returned when an invalid password is used for login.
+	ErrInvalidPassword = errors.New("models: provided password was invalid")
 )
 
 func NewUserService(db *gorm.DB) *UserService {
@@ -67,10 +69,31 @@ func hashPassword(password string) (string, error) {
 	return string(bytes), err
 }
 
-// checkPasswordHash compares a password and a hash.
-func checkPasswordHash(password, hash string) bool {
+// Authenticate will authenticate a user and returns a User on success
+// or return an error on failure.
+func (us *UserService) Authenticate(email string, password string) (*User, error) {
+	user, err := us.ByEmail(email)
+	if err != nil {
+		return nil, err
+	}
+	err = checkPasswordHash(password, user.PasswordHash)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
+// checkPasswordHash compares a password and a hash and
+// either returns nil on success or an error on failure.
+func checkPasswordHash(password, hash string) error {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
-	return err == nil
+	if err != nil {
+		if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
+			return ErrInvalidPassword
+		}
+		return err
+	}
+	return nil
 }
 
 // Update will update the user with the provided data.
