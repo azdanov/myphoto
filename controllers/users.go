@@ -1,32 +1,26 @@
 package controllers
 
 import (
+	"fmt"
 	"myphoto/models"
 	"myphoto/views"
 	"net/http"
 )
+
+type Users struct {
+	NewView   *views.View
+	LoginView *views.View
+	us        *models.UserService
+}
 
 // NewUsers creates a new Users Controller.
 // This function will panic if templates are not correct,
 // and should be used only during initial mux setup.
 func NewUsers(us *models.UserService) *Users {
 	return &Users{
-		NewView: views.NewView("index", "users/new"),
-		us:      us,
-	}
-}
-
-type Users struct {
-	NewView *views.View
-	us      *models.UserService
-}
-
-// New is used to render a form where a user can create an account.
-// GET /signup
-func (u *Users) New(w http.ResponseWriter, r *http.Request) {
-	err := u.NewView.Render(w, nil)
-	if err != nil {
-		panic(err)
+		NewView:   views.NewView("index", "users/new"),
+		LoginView: views.NewView("index", "users/login"),
+		us:        us,
 	}
 }
 
@@ -56,4 +50,20 @@ func toUserModel(form SignupForm) models.User {
 		Email:    form.Email,
 		Password: form.Password,
 	}
+}
+
+type LoginForm struct {
+	Email    string `schema:"email"`
+	Password string `schema:"password"`
+}
+
+// Login is used to authenticate a user.
+// POST /login
+func (u *Users) Login(w http.ResponseWriter, r *http.Request) {
+	var form LoginForm
+	if err := parseForm(r, &form); err != nil {
+		panic(err)
+	}
+
+	fmt.Fprintln(w, form)
 }
