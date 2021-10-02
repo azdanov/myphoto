@@ -109,6 +109,7 @@ func (u *Users) signIn(w http.ResponseWriter, user *models.User) error {
 		Name:     "remember_token",
 		Value:    user.Remember,
 		SameSite: http.SameSiteLaxMode,
+		HttpOnly: true,
 	}
 	http.SetCookie(w, &cookie)
 	return nil
