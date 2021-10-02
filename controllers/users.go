@@ -2,8 +2,8 @@ package controllers
 
 import (
 	"errors"
-	"fmt"
 	"myphoto/models"
+	"myphoto/rand"
 	"myphoto/views"
 	"net/http"
 )
@@ -38,14 +38,16 @@ func (u *Users) Create(w http.ResponseWriter, r *http.Request) {
 	if err := parseForm(r, &form); err != nil {
 		panic(err)
 	}
-
 	user := toUserModel(form)
-	err := u.us.Create(&user)
-	if err != nil {
+	if err := u.us.Create(&user); err != nil {
 		http.Error(w, err.Error(), http.StatusConflict)
 		return
 	}
-	fmt.Fprintln(w, user)
+	if err := u.signIn(w, &user); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	http.Redirect(w, r, "/", http.StatusFound)
 }
 
 func toUserModel(form SignupForm) models.User {
@@ -81,5 +83,33 @@ func (u *Users) Login(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	fmt.Fprintln(w, user)
+
+	if err = u.signIn(w, user); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	http.Redirect(w, r, "/", http.StatusFound)
+}
+
+// signIn is used to sign the user in by creating a cookie.
+func (u *Users) signIn(w http.ResponseWriter, user *models.User) error {
+	if user.Remember == "" {
+		token, err := rand.RememberToken()
+		if err != nil {
+			return err
+		}
+		user.Remember = token
+		err = u.us.Update(user)
+		if err != nil {
+			return err
+		}
+	}
+
+	cookie := http.Cookie{
+		Name:     "remember_token",
+		Value:    user.Remember,
+		SameSite: http.SameSiteLaxMode,
+	}
+	http.SetCookie(w, &cookie)
+	return nil
 }
