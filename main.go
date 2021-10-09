@@ -29,7 +29,10 @@ func main() {
 		panic(err)
 	}
 
-	us := models.NewUserService(db)
+	us, err := models.NewUserService(db)
+	if err != nil {
+		panic(err)
+	}
 	err = us.AutoMigrate()
 	if err != nil {
 		panic(err)

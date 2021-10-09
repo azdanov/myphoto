@@ -11,13 +11,13 @@ import (
 type Users struct {
 	NewView   *views.View
 	LoginView *views.View
-	us        *models.UserService
+	us        models.UserService
 }
 
 // NewUsers creates a new Users Controller.
 // This function will panic if templates are not correct,
 // and should be used only during initial mux setup.
-func NewUsers(us *models.UserService) *Users {
+func NewUsers(us models.UserService) *Users {
 	return &Users{
 		NewView:   views.NewView("index", "users/new"),
 		LoginView: views.NewView("index", "users/login"),
@@ -74,7 +74,7 @@ func (u *Users) Login(w http.ResponseWriter, r *http.Request) {
 	user, err := u.us.Authenticate(form.Email, form.Password)
 	if err != nil {
 		switch {
-		case errors.Is(err, models.ErrResNotFound):
+		case errors.Is(err, models.ErrResourceNotFound):
 			http.Error(w, "Invalid email address", http.StatusForbidden)
 		case errors.Is(err, models.ErrInvalidPassword):
 			http.Error(w, "Invalid password provided", http.StatusForbidden)
