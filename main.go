@@ -45,9 +45,9 @@ func main() {
 	r.Handle("/", staticC.Home).Methods("GET")
 	r.Handle("/contact", staticC.Contact).Methods("GET")
 	r.Handle("/login", usersC.LoginView).Methods("GET")
-	r.HandleFunc("/login", usersC.Login).Methods("POST")
-	r.Handle("/signup", usersC.NewView).Methods("GET")
-	r.HandleFunc("/signup", usersC.Create).Methods("POST")
+	r.HandleFunc("/login", usersC.LoginUser).Methods("POST")
+	r.HandleFunc("/signup", usersC.Create).Methods("GET")
+	r.HandleFunc("/signup", usersC.CreateUser).Methods("POST")
 
 	fmt.Println("Starting on: http://localhost:3000")
 	if err := http.ListenAndServe("localhost:3000", r); err != nil {

@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"errors"
+	"log"
 	"myphoto/models"
 	"myphoto/rand"
 	"myphoto/views"
@@ -9,9 +10,9 @@ import (
 )
 
 type Users struct {
-	NewView   *views.View
-	LoginView *views.View
-	us        models.UserService
+	CreateView *views.View
+	LoginView  *views.View
+	us         models.UserService
 }
 
 // NewUsers creates a new Users Controller.
@@ -19,10 +20,18 @@ type Users struct {
 // and should be used only during initial mux setup.
 func NewUsers(us models.UserService) *Users {
 	return &Users{
-		NewView:   views.NewView("index", "users/new"),
-		LoginView: views.NewView("index", "users/login"),
-		us:        us,
+		CreateView: views.NewView("index", "users/new"),
+		LoginView:  views.NewView("index", "users/login"),
+		us:         us,
 	}
+}
+
+// Create is used to render the form where a user can
+// create a new user account.
+//
+// GET /signup
+func (u *Users) Create(w http.ResponseWriter, r *http.Request) {
+	u.CreateView.Render(w, r, nil)
 }
 
 type SignupForm struct {
@@ -31,20 +40,25 @@ type SignupForm struct {
 	Password string `schema:"password"`
 }
 
-// Create is used to for processing the user create account form.
+// CreateUser is used to for processing the user create account form.
 // POST /signup
-func (u *Users) Create(w http.ResponseWriter, r *http.Request) {
+func (u *Users) CreateUser(w http.ResponseWriter, r *http.Request) {
+	var vd views.Data
 	var form SignupForm
 	if err := parseForm(r, &form); err != nil {
-		panic(err)
+		log.Println(err)
+		vd.SetAlert(err)
+		u.CreateView.Render(w, r, vd)
+		return
 	}
 	user := toUserModel(form)
 	if err := u.us.Create(&user); err != nil {
-		http.Error(w, err.Error(), http.StatusConflict)
+		vd.SetAlert(err)
+		u.CreateView.Render(w, r, vd)
 		return
 	}
 	if err := u.signIn(w, &user); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Redirect(w, r, "/login", http.StatusFound)
 		return
 	}
 	http.Redirect(w, r, "/", http.StatusFound)
@@ -63,29 +77,33 @@ type LoginForm struct {
 	Password string `schema:"password"`
 }
 
-// Login is used to authenticate a user.
+// LoginUser is used to authenticate a user.
 // POST /login
-func (u *Users) Login(w http.ResponseWriter, r *http.Request) {
+func (u *Users) LoginUser(w http.ResponseWriter, r *http.Request) {
+	vd := views.Data{}
 	var form LoginForm
 	if err := parseForm(r, &form); err != nil {
-		panic(err)
+		log.Println(err)
+		vd.SetAlert(err)
+		u.LoginView.Render(w, r, vd)
+		return
 	}
 
 	user, err := u.us.Authenticate(form.Email, form.Password)
 	if err != nil {
 		switch {
-		case errors.Is(err, models.ErrResourceNotFound):
-			http.Error(w, "Invalid email address", http.StatusForbidden)
-		case errors.Is(err, models.ErrInvalidPassword):
-			http.Error(w, "Invalid password provided", http.StatusForbidden)
+		case errors.Is(err, models.ErrResourceNotFound), errors.Is(err, models.ErrInvalidPassword):
+			vd.AlertError("Invalid email address or password")
 		default:
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			vd.SetAlert(err)
 		}
+		u.LoginView.Render(w, r, vd)
 		return
 	}
 
 	if err = u.signIn(w, user); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		vd.SetAlert(err)
+		u.LoginView.Render(w, r, vd)
 		return
 	}
 	http.Redirect(w, r, "/", http.StatusFound)

@@ -1,7 +1,10 @@
 package views
 
 import (
+	"bytes"
 	"html/template"
+	"io"
+	"log"
 	"net/http"
 	"path/filepath"
 )
@@ -34,14 +37,30 @@ type View struct {
 }
 
 func (v *View) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if err := v.Render(w, nil); err != nil {
-		panic(err)
-	}
+	v.Render(w, r, nil)
 }
 
-func (v *View) Render(w http.ResponseWriter, data interface{}) error {
+func (v *View) Render(w http.ResponseWriter, r *http.Request, data interface{}) {
 	w.Header().Set("Content-Type", "text/html")
-	return v.Template.ExecuteTemplate(w, v.Layout, data)
+
+	switch data.(type) {
+	case Data:
+		// empty
+	default:
+		data = Data{
+			Yield: data,
+		}
+	}
+	var buf bytes.Buffer
+	if err := v.Template.ExecuteTemplate(&buf, v.Layout, data); err != nil {
+		log.Println(err)
+		http.Error(w, "Something went wrong. If the problem persists, please email support@myphoto.com.", http.StatusInternalServerError)
+		return
+	}
+	_, err := io.Copy(w, &buf)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func layoutFiles() []string {

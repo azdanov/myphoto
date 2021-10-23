@@ -11,38 +11,6 @@ import (
 	"gorm.io/gorm"
 )
 
-var (
-	// ErrResourceNotFound is returned when a resource cannot be found in the database.
-	ErrResourceNotFound = errors.New("resource was not found")
-
-	// ErrInvalidID is returned when an invalid ID is provided to a method like Delete.
-	ErrInvalidID = errors.New("provided ID was invalid")
-
-	// ErrInvalidPassword is returned when an invalid password is used for login.
-	ErrInvalidPassword = errors.New("provided password was invalid")
-
-	// ErrRequiredEmail is returned when an empty email is provided.
-	ErrRequiredEmail = errors.New("email address is required")
-
-	// ErrInvalidEmail is returned when an invalid format of email is provided.
-	ErrInvalidEmail = errors.New("provided email address is invalid")
-
-	// ErrUnavailableEmail is returned when an email address is already taken.
-	ErrUnavailableEmail = errors.New("provided email address is already taken")
-
-	// ErrRequiredPassword is returned when an empty password is provided
-	ErrRequiredPassword = errors.New("password is required")
-
-	// ErrShortPassword is returned when a passwords' length is too short
-	ErrShortPassword = errors.New("password length must be at least 8 characters")
-
-	// ErrShortRemember is returned when a remember-tokens' length is too short
-	ErrShortRemember = errors.New("remember token length must be at least 32 bytes")
-
-	// ErrRequiredRemember is returned when an empty remember token is provided
-	ErrRequiredRemember = errors.New("remember token is required")
-)
-
 const hmacSecretKey = "secret-hmac-key"
 
 // User represents the user model stored in the database.
