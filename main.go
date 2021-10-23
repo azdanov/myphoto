@@ -7,8 +7,6 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
 )
 
 const (
@@ -22,24 +20,17 @@ const (
 )
 
 func main() {
-	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s TimeZone=%s",
+	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s TimeZone=%s",
 		host, port, user, password, dbname, sslmode, timeZone)
-	db, err := openDB(dsn)
+	svc, err := models.NewServices(psqlInfo)
 	if err != nil {
 		panic(err)
 	}
-
-	us, err := models.NewUserService(db)
-	if err != nil {
-		panic(err)
-	}
-	err = us.AutoMigrate()
-	if err != nil {
-		panic(err)
-	}
+	defer svc.Close()
+	svc.AutoMigrate()
 
 	staticC := controllers.NewStatic()
-	usersC := controllers.NewUsers(us)
+	usersC := controllers.NewUsers(svc.User)
 
 	r := mux.NewRouter()
 	r.Handle("/", staticC.Home).Methods("GET")
@@ -53,13 +44,4 @@ func main() {
 	if err := http.ListenAndServe("localhost:3000", r); err != nil {
 		panic(err)
 	}
-}
-
-func openDB(dsn string) (*gorm.DB, error) {
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
-	if err != nil {
-		return nil, err
-	}
-
-	return db, nil
 }

@@ -43,9 +43,6 @@ type UserDB interface {
 	Create(user *User) error
 	Update(user *User) error
 	Delete(id uint) error
-
-	AutoMigrate() error
-	DestructiveReset() error
 }
 
 // UserService is a set of methods used to manipulate
@@ -60,11 +57,11 @@ type UserService interface {
 	Authenticate(email, password string) (*User, error)
 }
 
-func NewUserService(db *gorm.DB) (UserService, error) {
+func NewUserService(db *gorm.DB) UserService {
 	ug := &userGorm{db: db}
 	hmac := hash.NewHMAC(hmacSecretKey)
 	uv := &userValidator{UserDB: ug, hmac: hmac}
-	return &userService{UserDB: uv}, nil
+	return &userService{UserDB: uv}
 }
 
 // Confirm that userService implements UserDB interface.
@@ -349,18 +346,4 @@ func (ug *userGorm) Update(user *User) error {
 func (ug *userGorm) Delete(id uint) error {
 	user := User{Model: gorm.Model{ID: id}}
 	return ug.db.Delete(&user).Error
-}
-
-func (ug *userGorm) DestructiveReset() error {
-	if err := ug.db.Migrator().DropTable(&User{}); err != nil {
-		panic(err)
-	}
-	return ug.AutoMigrate()
-}
-
-func (ug *userGorm) AutoMigrate() error {
-	if err := ug.db.AutoMigrate(&User{}); err != nil {
-		panic(err)
-	}
-	return nil
 }
