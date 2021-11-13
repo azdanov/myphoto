@@ -11,7 +11,10 @@ import (
 	"gorm.io/gorm"
 )
 
-const hmacSecretKey = "secret-hmac-key"
+const (
+	hmacSecretKey     = "secret-hmac-key"
+	minPasswordLength = 8
+)
 
 // User represents the user model stored in the database.
 // Used for user accounts, storing both an email and a
@@ -71,7 +74,7 @@ type userService struct {
 	UserDB
 }
 
-func (us *userService) Authenticate(email string, password string) (*User, error) {
+func (us *userService) Authenticate(email, password string) (*User, error) {
 	user, err := us.ByEmail(email)
 	if err != nil {
 		return nil, err
@@ -203,7 +206,7 @@ func (uv *userValidator) requiredPasswordHash(u *User) error {
 
 func (uv *userValidator) validatePassword(u *User) error {
 	if u.Password != "" {
-		if len([]rune(u.Password)) < 8 {
+		if len([]rune(u.Password)) < minPasswordLength {
 			return ErrShortPassword
 		}
 	}

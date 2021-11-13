@@ -1,0 +1,55 @@
+linters-settings:
+  funlen:
+    lines: 100
+    statements: 50
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      - experimental
+      - opinionated
+      - performance
+      - style
+  gocyclo:
+    min-complexity: 15
+
+linters:
+  disable-all: true
+  enable:
+    - deadcode
+    - errcheck
+    - gosimple
+    - govet
+    - ineffassign
+    - staticcheck
+    - structcheck
+    - typecheck
+    - unused
+    - varcheck
+
+    - bodyclose
+    - dogsled
+    - dupl
+    - exhaustive
+    - exportloopref
+    - funlen
+    - gochecknoinits
+    - goconst
+    - gocritic
+    - gocyclo
+    - gofumpt
+    - goimports
+    - gomnd
+    - goprintffuncname
+    - gosec
+    - lll
+    - misspell
+    - nakedret
+    - noctx
+    - nolintlint
+    - revive
+    - rowserrcheck
+    - stylecheck
+    - unconvert
+    - unparam
+    - whitespace
+

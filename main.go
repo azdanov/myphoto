@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"myphoto/controllers"
+	"myphoto/middleware"
 	"myphoto/models"
 	"net/http"
 
@@ -27,11 +28,13 @@ func main() {
 		panic(err)
 	}
 	defer svc.Close()
-	svc.AutoMigrate()
+	_ = svc.AutoMigrate()
 
 	staticC := controllers.NewStatic()
 	usersC := controllers.NewUsers(svc.User)
 	galleriesC := controllers.NewGalleries(svc.Gallery)
+
+	requireUserMw := middleware.RequireUser{UserService: svc.User}
 
 	r := mux.NewRouter()
 	r.Handle("/", staticC.Home).Methods("GET")
@@ -41,15 +44,8 @@ func main() {
 	r.HandleFunc("/signup", usersC.New).Methods("GET")
 	r.HandleFunc("/signup", usersC.CreateUser).Methods("POST")
 
-	// r.Handle("/galleries", galleriesC.Index).Methods("GET")
-	r.Handle("/galleries/new", galleriesC.New).Methods("GET")
-	r.HandleFunc("/galleries", galleriesC.Create).Methods("POST")
-	// r.HandleFunc("/galleries/{id:[0-9]+}/edit", galleriesC.Edit).Methods("GET")
-	// r.HandleFunc("/galleries/{id:[0-9]+}/update", galleriesC.Update).Methods("POST")
-	// r.HandleFunc("/galleries/{id:[0-9]+}/delete", galleriesC.Delete).Methods("POST")
-	// r.HandleFunc("/galleries/{id:[0-9]+}/images", galleriesC.ImageUpload).Methods("POST")
-	// r.HandleFunc("/galleries/{id:[0-9]+}/images/{filename}/delete", galleriesC.ImageDelete).Methods("POST")
-	// r.HandleFunc("/galleries/{id:[0-9]+}", galleriesC.Show).Methods("GET")
+	r.Handle("/galleries/new", requireUserMw.Apply(galleriesC.New)).Methods("GET")
+	r.HandleFunc("/galleries", requireUserMw.ApplyFn(galleriesC.Create)).Methods("POST")
 
 	fmt.Println("Starting on: http://localhost:3000")
 	if err := http.ListenAndServe("localhost:3000", r); err != nil {
