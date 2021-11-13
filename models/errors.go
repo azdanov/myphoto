@@ -11,6 +11,12 @@ const (
 	// ErrInvalidID is returned when an invalid ID is provided to a method like Delete.
 	ErrInvalidID privateError = "ID is invalid"
 
+	// ErrUserIDRequired is returned when a user ID is not provided.
+	ErrUserIDRequired privateError = "user ID is required"
+
+	// ErrTitleRequired is returned when a title is not provided.
+	ErrTitleRequired publicError = "title is required"
+
 	// ErrInvalidPassword is returned when an invalid password is used for login.
 	ErrInvalidPassword publicError = "password is invalid"
 

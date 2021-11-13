@@ -10,9 +10,9 @@ import (
 )
 
 type Users struct {
-	CreateView *views.View
-	LoginView  *views.View
-	us         models.UserService
+	NewView   *views.View
+	LoginView *views.View
+	us        models.UserService
 }
 
 // NewUsers creates a new Users Controller.
@@ -20,18 +20,18 @@ type Users struct {
 // and should be used only during initial mux setup.
 func NewUsers(us models.UserService) *Users {
 	return &Users{
-		CreateView: views.NewView("index", "users/new"),
-		LoginView:  views.NewView("index", "users/login"),
-		us:         us,
+		NewView:   views.NewView("index", "users/new"),
+		LoginView: views.NewView("index", "users/login"),
+		us:        us,
 	}
 }
 
-// Create is used to render the form where a user can
+// New is used to render the form where a user can
 // create a new user account.
 //
 // GET /signup
-func (u *Users) Create(w http.ResponseWriter, r *http.Request) {
-	u.CreateView.Render(w, r, nil)
+func (u *Users) New(w http.ResponseWriter, r *http.Request) {
+	u.NewView.Render(w, r, nil)
 }
 
 type SignupForm struct {
@@ -48,13 +48,13 @@ func (u *Users) CreateUser(w http.ResponseWriter, r *http.Request) {
 	if err := parseForm(r, &form); err != nil {
 		log.Println(err)
 		vd.SetAlert(err)
-		u.CreateView.Render(w, r, vd)
+		u.NewView.Render(w, r, vd)
 		return
 	}
 	user := toUserModel(form)
 	if err := u.us.Create(&user); err != nil {
 		vd.SetAlert(err)
-		u.CreateView.Render(w, r, vd)
+		u.NewView.Render(w, r, vd)
 		return
 	}
 	if err := u.signIn(w, &user); err != nil {
