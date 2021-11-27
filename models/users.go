@@ -330,14 +330,6 @@ func (ug *userGorm) ByRemember(rememberHash string) (*User, error) {
 	return &user, nil
 }
 
-func first(db *gorm.DB, dst interface{}) error {
-	err := db.First(dst).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return ErrResourceNotFound
-	}
-	return err
-}
-
 func (ug *userGorm) Create(user *User) error {
 	return ug.db.Create(user).Error
 }

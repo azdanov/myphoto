@@ -45,6 +45,23 @@ func (gv *galleryValidator) Create(gallery *Gallery) error {
 	return gv.GalleryDB.Create(gallery)
 }
 
+func (gv *galleryValidator) Update(gallery *Gallery) error {
+	err := runGalleryValFuncs(gallery,
+		gv.userIDRequired,
+		gv.titleRequired)
+	if err != nil {
+		return err
+	}
+	return gv.GalleryDB.Update(gallery)
+}
+
+func (gv *galleryValidator) Delete(id uint) error {
+	if id <= 0 {
+		return ErrInvalidID
+	}
+	return gv.GalleryDB.Delete(id)
+}
+
 type galleryValFunc func(*Gallery) error
 
 func (gv *galleryValidator) userIDRequired(g *Gallery) error {

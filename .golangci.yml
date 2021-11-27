@@ -11,6 +11,8 @@ linters-settings:
       - style
   gocyclo:
     min-complexity: 15
+  lll:
+    line-length: 150
 
 linters:
   disable-all: true
@@ -25,7 +27,6 @@ linters:
     - typecheck
     - unused
     - varcheck
-
     - bodyclose
     - dogsled
     - dupl

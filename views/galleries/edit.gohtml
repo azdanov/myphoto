@@ -1,0 +1,41 @@
+{{define "style"}}
+    <style></style>
+{{end}}
+
+{{define "yield"}}
+    <div class="col-md-7 col-lg-8 mx-auto">
+        <div>
+            <h2>Edit gallery</h2>
+            <div class="d-flex align-items-center justify-content-between">
+                <a class="me-3" href="/galleries/{{.ID}}">
+                    View gallery
+                </a>
+                {{template "deleteGalleryForm" .}}
+            </div>
+            <hr>
+        </div>
+        <div class="col-md-12">
+            {{template "editGalleryForm" .}}
+        </div>
+    </div>
+{{end}}
+
+{{define "editGalleryForm"}}
+    <form action="/galleries/{{.ID}}/update" method="POST" class="form-horizontal">
+        <div class="form-group">
+            <label for="title" class="form-label">Title</label>
+            <input type="text" name="title" class="form-control" id="title" placeholder="What is the title of your gallery?" value="{{.Title}}">
+            <div class="col-md-1 mt-4">
+                <button type="submit" class="btn btn-primary">Save</button>
+            </div>
+        </div>
+    </form>
+{{end}}
+
+{{define "deleteGalleryForm"}}
+    <form action="/galleries/{{.ID}}/delete" method="POST" class="form-horizontal">
+        <button type="submit" class="btn btn-outline-danger">Delete</button>
+    </form>
+{{end}}
+
+
