@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"fmt"
+	"myphoto/context"
 	"myphoto/models"
 	"net/http"
 )
@@ -26,7 +26,9 @@ func (mw *RequireUser) ApplyFn(next http.HandlerFunc) http.HandlerFunc {
 			http.Redirect(w, r, "/login", http.StatusFound)
 			return
 		}
-		fmt.Println(user)
+		ctx := r.Context()
+		ctx = context.WithUser(ctx, user)
+		r = r.WithContext(ctx)
 
 		next(w, r)
 	}

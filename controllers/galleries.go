@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"fmt"
+	"myphoto/context"
 	"myphoto/models"
 	"myphoto/views"
 	"net/http"
@@ -10,10 +11,7 @@ import (
 func NewGalleries(gs models.GalleryService) *Galleries {
 	return &Galleries{
 		New: views.NewView("index", "galleries/new"),
-		// IndexView: views.NewView("index", "galleries/index"),
-		// ShowView:  views.NewView("index", "galleries/show"),
-		// EditView:  views.NewView("index", "galleries/edit"),
-		gs: gs,
+		gs:  gs,
 	}
 }
 
@@ -39,8 +37,15 @@ func (g *Galleries) Create(w http.ResponseWriter, r *http.Request) {
 		g.New.Render(w, r, vd)
 		return
 	}
+	user := context.User(r.Context())
+	if user == nil {
+		http.Redirect(w, r, "/login", http.StatusFound)
+		return
+	}
+	fmt.Println("Create gallery got the user:", user)
 	gallery := models.Gallery{
-		Title: form.Title,
+		Title:  form.Title,
+		UserID: user.ID,
 	}
 	if err := g.gs.Create(&gallery); err != nil {
 		vd.SetAlert(err)
