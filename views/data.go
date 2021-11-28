@@ -3,6 +3,7 @@ package views
 import (
 	"errors"
 	"log"
+	"myphoto/models"
 )
 
 const (
@@ -28,6 +29,7 @@ type Alert struct {
 // Data is the top level structure that views accept.
 type Data struct {
 	Alert *Alert
+	User  *models.User
 	Yield interface{}
 }
 

@@ -35,14 +35,16 @@ func main() {
 	usersC := controllers.NewUsers(svc.User)
 	galleriesC := controllers.NewGalleries(svc.Gallery, r)
 
-	requireUserMw := middleware.RequireUser{UserService: svc.User}
+	userMw := middleware.User{UserService: svc.User}
+	requireUserMw := middleware.RequireUser{User: userMw}
 
 	r.Handle("/", staticC.Home).Methods("GET")
 	r.Handle("/contact", staticC.Contact).Methods("GET")
 	r.Handle("/login", usersC.LoginView).Methods("GET")
-	r.HandleFunc("/login", usersC.LoginUser).Methods("POST")
+	r.HandleFunc("/login", usersC.Login).Methods("POST")
+	r.HandleFunc("/logout", requireUserMw.ApplyFn(usersC.Logout)).Methods("POST")
 	r.HandleFunc("/signup", usersC.New).Methods("GET")
-	r.HandleFunc("/signup", usersC.CreateUser).Methods("POST")
+	r.HandleFunc("/signup", usersC.Create).Methods("POST")
 
 	r.Handle("/galleries", requireUserMw.ApplyFn(galleriesC.Index)).Methods("GET")
 	r.Handle("/galleries/new", requireUserMw.Apply(galleriesC.New)).Methods("GET")
@@ -54,7 +56,7 @@ func main() {
 	r.HandleFunc("/galleries/{id:[0-9]+}", galleriesC.Show).Methods("GET").Name(controllers.ShowGallery)
 
 	fmt.Println("Starting on: http://localhost:3000")
-	if err := http.ListenAndServe("localhost:3000", r); err != nil {
+	if err := http.ListenAndServe("localhost:3000", userMw.Apply(r)); err != nil {
 		panic(err)
 	}
 }

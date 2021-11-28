@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"io"
 	"log"
+	"myphoto/context"
 	"net/http"
 	"path/filepath"
 )
@@ -43,16 +44,19 @@ func (v *View) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (v *View) Render(w http.ResponseWriter, r *http.Request, data interface{}) {
 	w.Header().Set("Content-Type", "text/html")
 
-	switch data.(type) {
+	var vd Data
+	switch d := data.(type) {
 	case Data:
-		// empty
+		vd = d
 	default:
-		data = Data{
+		vd = Data{
 			Yield: data,
 		}
 	}
+	vd.User = context.User(r.Context())
+
 	var buf bytes.Buffer
-	if err := v.Template.ExecuteTemplate(&buf, v.Layout, data); err != nil {
+	if err := v.Template.ExecuteTemplate(&buf, v.Layout, vd); err != nil {
 		log.Println(err)
 		http.Error(w, "Something went wrong. If the problem persists, please email support@myphoto.com.",
 			http.StatusInternalServerError)

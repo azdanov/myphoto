@@ -3,10 +3,12 @@ package controllers
 import (
 	"errors"
 	"log"
+	"myphoto/context"
 	"myphoto/models"
 	"myphoto/rand"
 	"myphoto/views"
 	"net/http"
+	"time"
 )
 
 type Users struct {
@@ -40,9 +42,9 @@ type SignupForm struct {
 	Password string `schema:"password"`
 }
 
-// CreateUser is used to for processing the user create account form.
+// Create is used to for processing the user create account form.
 // POST /signup
-func (u *Users) CreateUser(w http.ResponseWriter, r *http.Request) {
+func (u *Users) Create(w http.ResponseWriter, r *http.Request) {
 	var vd views.Data
 	var form SignupForm
 	if err := parseForm(r, &form); err != nil {
@@ -77,9 +79,9 @@ type LoginForm struct {
 	Password string `schema:"password"`
 }
 
-// LoginUser is used to authenticate a user.
+// Login is used to authenticate a user.
 // POST /login
-func (u *Users) LoginUser(w http.ResponseWriter, r *http.Request) {
+func (u *Users) Login(w http.ResponseWriter, r *http.Request) {
 	vd := views.Data{}
 	var form LoginForm
 	if err := parseForm(r, &form); err != nil {
@@ -131,4 +133,23 @@ func (u *Users) signIn(w http.ResponseWriter, user *models.User) error {
 	}
 	http.SetCookie(w, &cookie)
 	return nil
+}
+
+// Logout is used to delete a users' session cookie (remember_token)
+// and then will update the user resource with a new remember_token.
+// POST /logout
+func (u *Users) Logout(w http.ResponseWriter, r *http.Request) {
+	cookie := http.Cookie{
+		Name:     "remember_token",
+		Value:    "",
+		Expires:  time.Now(),
+		HttpOnly: true,
+	}
+	http.SetCookie(w, &cookie)
+
+	user := context.User(r.Context())
+	token, _ := rand.RememberToken()
+	user.Remember = token
+	_ = u.us.Update(user)
+	http.Redirect(w, r, "/", http.StatusFound)
 }
