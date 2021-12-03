@@ -3,6 +3,7 @@ package controllers
 import (
 	"fmt"
 	"log"
+	"mime/multipart"
 	"myphoto/context"
 	"myphoto/models"
 	"myphoto/views"
@@ -17,15 +18,18 @@ const (
 	ShowGallery = "show_gallery"
 	// EditGallery route name.
 	EditGallery = "edit_gallery"
+
+	maxMultipartMemory = 1 << 20 // 1 megabyte
 )
 
-func NewGalleries(gs models.GalleryService, r *mux.Router) *Galleries {
+func NewGalleries(gs models.GalleryService, is models.ImageService, r *mux.Router) *Galleries {
 	return &Galleries{
 		New:       views.NewView("index", "galleries/new"),
 		ShowView:  views.NewView("index", "galleries/show"),
 		EditView:  views.NewView("index", "galleries/edit"),
 		IndexView: views.NewView("index", "galleries/index"),
 		gs:        gs,
+		is:        is,
 		r:         r,
 	}
 }
@@ -36,6 +40,7 @@ type Galleries struct {
 	ShowView  *views.View
 	EditView  *views.View
 	gs        models.GalleryService
+	is        models.ImageService
 	r         *mux.Router
 }
 
@@ -154,6 +159,90 @@ func (g *Galleries) Create(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, url.Path, http.StatusFound)
 }
 
+// ImageUpload is used to for processing the gallery image upload form.
+// POST /galleries/:id/images
+func (g *Galleries) ImageUpload(w http.ResponseWriter, r *http.Request) {
+	gallery, err := g.galleryByID(w, r)
+	if err != nil {
+		return
+	}
+	user := context.User(r.Context())
+	if gallery.UserID != user.ID {
+		http.Error(w, "Gallery not found", http.StatusNotFound)
+		return
+	}
+
+	var vd views.Data
+	vd.Yield = gallery
+	err = r.ParseMultipartForm(maxMultipartMemory)
+	if err != nil {
+		vd.SetAlert(err)
+		g.EditView.Render(w, r, vd)
+		return
+	}
+
+	files := r.MultipartForm.File["images"]
+	for _, f := range files {
+		func(f *multipart.FileHeader) {
+			file, err := f.Open()
+			if err != nil {
+				vd.SetAlert(err)
+				g.EditView.Render(w, r, vd)
+				return
+			}
+			defer file.Close()
+			err = g.is.Create(gallery.ID, file, f.Filename)
+			if err != nil {
+				vd.SetAlert(err)
+				g.EditView.Render(w, r, vd)
+				return
+			}
+		}(f)
+	}
+
+	url, err := g.r.Get(EditGallery).URL("id", fmt.Sprintf("%v", gallery.ID))
+	if err != nil {
+		log.Println(err)
+		http.Redirect(w, r, "/galleries", http.StatusFound)
+		return
+	}
+	http.Redirect(w, r, url.Path, http.StatusFound)
+}
+
+// ImageDelete is used to delete an image.
+// POST /galleries/:id/images/:filename/delete
+func (g *Galleries) ImageDelete(w http.ResponseWriter, r *http.Request) {
+	gallery, err := g.galleryByID(w, r)
+	if err != nil {
+		return
+	}
+	user := context.User(r.Context())
+	if gallery.UserID != user.ID {
+		http.Error(w, "Gallery not found", http.StatusNotFound)
+		return
+	}
+	filename := mux.Vars(r)["filename"]
+	i := models.Image{
+		Filename:  filename,
+		GalleryID: gallery.ID,
+	}
+	err = g.is.Delete(&i)
+	if err != nil {
+		var vd views.Data
+		vd.Yield = gallery
+		vd.SetAlert(err)
+		g.EditView.Render(w, r, vd)
+		return
+	}
+	url, err := g.r.Get(EditGallery).URL("id", fmt.Sprintf("%v", gallery.ID))
+	if err != nil {
+		log.Println(err)
+		http.Redirect(w, r, "/galleries", http.StatusFound)
+		return
+	}
+	http.Redirect(w, r, url.Path, http.StatusFound)
+}
+
 // Delete is used to delete a gallery.
 // POST /galleries/:id/delete
 func (g *Galleries) Delete(w http.ResponseWriter, r *http.Request) {
@@ -173,6 +262,10 @@ func (g *Galleries) Delete(w http.ResponseWriter, r *http.Request) {
 		vd.Yield = gallery
 		g.EditView.Render(w, r, vd)
 		return
+	}
+	err = g.is.DeleteGallery(gallery.ID)
+	if err != nil {
+		log.Println(err)
 	}
 	http.Redirect(w, r, "/galleries", http.StatusFound)
 }
@@ -196,5 +289,7 @@ func (g *Galleries) galleryByID(w http.ResponseWriter, r *http.Request) (*models
 		}
 		return nil, err
 	}
+	images, _ := g.is.ByGalleryID(gallery.ID)
+	gallery.Images = images
 	return gallery, nil
 }

@@ -76,3 +76,4 @@ gen
 .history/
 .air.toml
 tmp/
+/images/

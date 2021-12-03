@@ -5,8 +5,21 @@ import "gorm.io/gorm"
 // Gallery represents the image resources stored in the database.
 type Gallery struct {
 	gorm.Model
-	UserID uint   `gorm:"not_null;index"`
-	Title  string `gorm:"not_null"`
+	UserID uint    `gorm:"not_null;index"`
+	Title  string  `gorm:"not_null"`
+	Images []Image `gorm:"-"`
+}
+
+func (g *Gallery) ImagesSplitN(n int) [][]Image {
+	images := make([][]Image, n)
+	for i := 0; i < n; i++ {
+		images[i] = make([]Image, 0)
+	}
+	for i, img := range g.Images {
+		bucket := i % n
+		images[bucket] = append(images[bucket], img)
+	}
+	return images
 }
 
 type GalleryService interface {

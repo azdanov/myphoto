@@ -11,5 +11,15 @@
             <hr>
         </div>
     </div>
-    <p>Images...</p>
+    <div class="row mb-5">
+        {{range .ImagesSplitN 3}}
+            <div class="col-4">
+                {{range .}}
+                    <a href="{{.Path}}" class="mt-3 d-inline-block">
+                        <img src="{{.Path}}" class="img-thumbnail">
+                    </a>
+                {{end}}
+            </div>
+        {{end}}
+    </div>
 {{end}}
