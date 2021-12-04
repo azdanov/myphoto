@@ -4,14 +4,17 @@ go 1.17
 
 require (
 	github.com/badoux/checkmail v1.2.1
+	github.com/gorilla/csrf v1.7.1
 	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/schema v1.2.0
+	github.com/pkg/errors v0.9.1
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519
 	gorm.io/driver/postgres v1.1.2
 	gorm.io/gorm v1.21.16
 )
 
 require (
+	github.com/gorilla/securecookie v1.1.1 // indirect
 	github.com/jackc/chunkreader/v2 v2.0.1 // indirect
 	github.com/jackc/pgconn v1.10.0 // indirect
 	github.com/jackc/pgio v1.0.0 // indirect

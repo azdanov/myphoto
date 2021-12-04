@@ -2,6 +2,7 @@ package views
 
 import (
 	"errors"
+	"html/template"
 	"log"
 	"myphoto/models"
 )
@@ -29,6 +30,7 @@ type Alert struct {
 type Data struct {
 	Alert *Alert
 	User  *models.User
+	CSRF  template.HTML
 	Yield interface{}
 }
 

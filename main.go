@@ -5,8 +5,10 @@ import (
 	"myphoto/controllers"
 	"myphoto/middleware"
 	"myphoto/models"
+	"myphoto/rand"
 	"net/http"
 
+	"github.com/gorilla/csrf"
 	"github.com/gorilla/mux"
 )
 
@@ -35,6 +37,11 @@ func main() {
 	usersC := controllers.NewUsers(svc.User)
 	galleriesC := controllers.NewGalleries(svc.Gallery, svc.Image, r)
 
+	b, err := rand.Bytes(32)
+	if err != nil {
+		panic(err)
+	}
+	csrfMw := csrf.Protect(b, csrf.Secure(true))
 	userMw := middleware.User{UserService: svc.User}
 	requireUserMw := middleware.RequireUser{User: userMw}
 
@@ -63,7 +70,8 @@ func main() {
 	r.HandleFunc("/galleries/{id:[0-9]+}", galleriesC.Show).Methods("GET").Name(controllers.ShowGallery)
 
 	fmt.Println("Starting on: http://localhost:3000")
-	if err := http.ListenAndServe("localhost:3000", userMw.Apply(r)); err != nil {
+	err = http.ListenAndServe("localhost:3000", csrfMw(userMw.Apply(r)))
+	if err != nil {
 		panic(err)
 	}
 }

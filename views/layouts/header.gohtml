@@ -40,6 +40,7 @@
 
 {{define "logoutForm"}}
     <form class="navbar-form navbar-left" action="/logout" method="POST">
+        {{csrfField}}
         <button type="submit" class="btn btn-link nav-link">Logout</button>
     </form>
 {{end}}
