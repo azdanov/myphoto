@@ -15,7 +15,6 @@ const (
 	AlertLevelInfo = "info"
 	// AlertLevelSuccess level corresponds to bootstrap success class.
 	AlertLevelSuccess = "success"
-
 	// AlertMessageGeneric is displayed when any random error is encountered.
 	AlertMessageGeneric = "Something went wrong. Please try again, and contact us if the problem persists."
 )

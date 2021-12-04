@@ -274,7 +274,6 @@ func (g *Galleries) galleryByID(w http.ResponseWriter, r *http.Request) (*models
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
-		log.Println(err)
 		http.Error(w, "Invalid gallery ID", http.StatusNotFound)
 		return nil, err
 	}
