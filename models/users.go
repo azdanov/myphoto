@@ -12,7 +12,6 @@ import (
 )
 
 const (
-	hmacSecretKey     = "secret-hmac-key"
 	minPasswordLength = 8
 )
 
@@ -60,7 +59,7 @@ type UserService interface {
 	Authenticate(email, password string) (*User, error)
 }
 
-func NewUserService(db *gorm.DB) UserService {
+func NewUserService(db *gorm.DB, hmacSecretKey string) UserService {
 	ug := &userGorm{db: db}
 	hmac := hash.NewHMAC(hmacSecretKey)
 	uv := &userValidator{UserDB: ug, hmac: hmac}

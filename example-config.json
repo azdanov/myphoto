@@ -1,0 +1,14 @@
+{
+  "port": 3000,
+  "env": "dev",
+  "hmac_key": "secret-hmac-key",
+  "database": {
+    "host": "localhost",
+    "port": 5432,
+    "user": "postgres",
+    "password": "password",
+    "db_name": "myphoto",
+    "ssl_mode": "disable",
+    "time_zone": "Europe/Tallinn"
+  }
+}

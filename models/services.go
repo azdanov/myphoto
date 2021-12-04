@@ -12,17 +12,48 @@ type Services struct {
 	db      *gorm.DB
 }
 
-func NewServices(psqlInfo string) (*Services, error) {
-	db, err := gorm.Open(postgres.Open(psqlInfo), &gorm.Config{})
-	if err != nil {
-		return nil, err
+type ServicesConfig func(*Services) error
+
+func WithGorm(dsn string) ServicesConfig {
+	return func(s *Services) error {
+		db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+		if err != nil {
+			return err
+		}
+		s.db = db
+		return nil
 	}
-	return &Services{
-		Gallery: NewGalleryService(db),
-		User:    NewUserService(db),
-		Image:   NewImageService(),
-		db:      db,
-	}, nil
+}
+
+func WithUser(hmacKey string) ServicesConfig {
+	return func(s *Services) error {
+		s.User = NewUserService(s.db, hmacKey)
+		return nil
+	}
+}
+
+func WithGallery() ServicesConfig {
+	return func(s *Services) error {
+		s.Gallery = NewGalleryService(s.db)
+		return nil
+	}
+}
+
+func WithImage() ServicesConfig {
+	return func(s *Services) error {
+		s.Image = NewImageService()
+		return nil
+	}
+}
+
+func NewServices(configs ...ServicesConfig) (*Services, error) {
+	var s Services
+	for _, config := range configs {
+		if err := config(&s); err != nil {
+			return nil, err
+		}
+	}
+	return &s, nil
 }
 
 // Close will close the database connection.

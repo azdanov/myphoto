@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"myphoto/controllers"
 	"myphoto/middleware"
@@ -12,25 +13,22 @@ import (
 	"github.com/gorilla/mux"
 )
 
-const (
-	host     = "localhost"
-	port     = 5432
-	user     = "postgres"
-	password = "password"
-	dbname   = "myphoto"
-	sslmode  = "disable"
-	timeZone = "Europe/Tallinn"
-)
-
 func main() {
-	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s TimeZone=%s",
-		host, port, user, password, dbname, sslmode, timeZone)
-	svc, err := models.NewServices(psqlInfo)
+	boolPtr := flag.Bool("prod", false, "Set this flag in production. This ensures that a config.json file is loaded before the application starts.")
+	flag.Parse()
+
+	cfg := LoadConfig(*boolPtr)
+	svc, err := models.NewServices(
+		models.WithGorm(cfg.Database.ConnectionInfo()),
+		models.WithUser(cfg.HMACKey),
+		models.WithGallery(),
+		models.WithImage(),
+	)
 	if err != nil {
 		panic(err)
 	}
 	defer svc.Close()
-	_ = svc.AutoMigrate()
+	svc.AutoMigrate()
 
 	r := mux.NewRouter()
 	staticC := controllers.NewStatic()
@@ -41,7 +39,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	csrfMw := csrf.Protect(b, csrf.Secure(true))
+	csrfMw := csrf.Protect(b, csrf.Secure(cfg.IsProd()))
 	userMw := middleware.User{UserService: svc.User}
 	requireUserMw := middleware.RequireUser{User: userMw}
 
@@ -69,9 +67,6 @@ func main() {
 	r.HandleFunc("/galleries/{id:[0-9]+}/images/{filename}/delete", requireUserMw.ApplyFn(galleriesC.ImageDelete)).Methods("POST")
 	r.HandleFunc("/galleries/{id:[0-9]+}", galleriesC.Show).Methods("GET").Name(controllers.ShowGallery)
 
-	fmt.Println("Starting on: http://localhost:3000")
-	err = http.ListenAndServe("localhost:3000", csrfMw(userMw.Apply(r)))
-	if err != nil {
-		panic(err)
-	}
+	fmt.Printf("Starting the server on :%d...\n", cfg.Port)
+	http.ListenAndServe(fmt.Sprintf(":%d", cfg.Port), csrfMw(userMw.Apply(r)))
 }
