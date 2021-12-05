@@ -61,7 +61,12 @@ func (u *Users) Create(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/login", http.StatusFound)
 		return
 	}
-	http.Redirect(w, r, "/", http.StatusFound)
+
+	alert := views.Alert{
+		Level:   views.AlertLevelSuccess,
+		Message: "Welcome to MyPhoto!",
+	}
+	views.RedirectAlert(w, r, "/galleries", http.StatusFound, alert)
 }
 
 func toUserModel(form SignupForm) models.User {
